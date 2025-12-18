@@ -12,9 +12,12 @@
   "packageManager": "pnpm@10.26.0",
   "dependencies": {
     "dotenv": "^17.2.3",
-    "pg": "^8.16.3"
+    "pg": "^8.16.3",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
-    "@types/pg": "^8.16.0"
+    "@types/pg": "^8.16.0",
+    "@types/uuid": "^11.0.0",
+    "tsx": "^4.21.0"
   }
 }
