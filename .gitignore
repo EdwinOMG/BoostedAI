@@ -1,0 +1,25 @@
+# Node
+node_modules/
+.pnpm-store/
+
+# Environment variables
+.env
+.env.*
+
+# Build output
+dist/
+build/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Database
+*.sqlite
