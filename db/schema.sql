@@ -1,7 +1,5 @@
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
 CREATE TABLE conversations (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY,
   model VARCHAR(50) NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -20,10 +18,11 @@ CREATE TABLE conversation_storage (
   id SERIAL PRIMARY KEY,
   conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
   storage_type VARCHAR(50) NOT NULL,
-  storage_key TEXT NOT NULL,
+  storage_key TEXT NOT NULL CHECK (length(storage_key) > 0),
   content_hash TEXT,
   parser_version VARCHAR(20) NOT NULL DEFAULT 'v1',
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
+  CONSTRAINT storage_key_nonempty CHECK (length(storage_key) > 0)
 );
 
 CREATE TABLE conversation_stats (
@@ -37,3 +36,6 @@ CREATE INDEX idx_conversations_model ON conversations(model);
 CREATE INDEX idx_sources_type ON conversation_sources(source_type);
 CREATE INDEX idx_storage_type ON conversation_storage(storage_type);
 CREATE INDEX idx_stats_last_accessed ON conversation_stats(last_accessed);
+
+
+

@@ -6,7 +6,7 @@
 //easily unit testable, and can be used by anything
 
 // import our pool and uuid for client side id generation
-import { pool } from "./pool";
+import { getPool } from "./pool";
 import { randomUUID } from "crypto";
 
 export type ModelType = "chatgpt" | "claude" | "other";
@@ -32,7 +32,7 @@ export async function ingestConversation(input: IngestConversationInput) {
   const id = randomUUID();
   const parserVersion = input.parserVersion ?? "v1";
 
-  const client = await pool.connect(); // single dedicated connection
+  const client = await getPool().connect(); // single dedicated connection
   try {
     await client.query("BEGIN"); // treat the following operations as one unit
 
