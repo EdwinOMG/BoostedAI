@@ -24,7 +24,7 @@ test("ingestConversation inserts into all tables", async () => {
     sourceReference: "sample.html",
     storageType: "local",
     storageKey: "conversations/sample.html",
-    contentHash: null,
+    contentHash: "hash_insert_test_1",
     parserVersion: "v1"
   });
 
@@ -71,4 +71,33 @@ test("dedupe returns the same conversation id for same contentHash", async () =>
   expect(first.id).toBe(second.id);
   expect(first.deduped).toBe(false);
   expect(second.deduped).toBe(true);
+});
+
+
+// test for ingestconversation making an outbox event
+
+test("ingestConversation creates an outbox event", async () => {
+  const { id } = await ingestConversation({
+    model: "chatgpt",
+    sourceType: "html_upload",
+    sourceReference: "sample.html",
+    storageType: "local",
+    storageKey: "conversations/sample.html",
+    contentHash: "hash1",
+    parserVersion: "v1"
+  });
+
+  const pool = getPool();
+  const res = await pool.query(
+    `SELECT event_type, aggregate_type, aggregate_id
+     FROM outbox_events
+     WHERE aggregate_id = $1
+     ORDER BY created_at DESC
+     LIMIT 1`,
+    [id]
+  );
+
+  expect(res.rowCount).toBe(1);
+  expect(res.rows[0].event_type).toBe("CONVERSATION_INGESTED");
+  expect(res.rows[0].aggregate_type).toBe("conversation");
 });

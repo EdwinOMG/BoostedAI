@@ -22,7 +22,7 @@ export type IngestConversationInput = {
   sourceReference?: string | null; // pointer to filename, url, or id OPTIONAL
   storageType: "s3" | "local"; // where the full content lives
   storageKey: string; // pointer to blob storage(S3)
-  contentHash?: string | null; // using later on for integrity checks
+  contentHash?: string; // using later on for integrity checks
   parserVersion?: string; // tracks parsing logic version
 };
 
@@ -75,12 +75,29 @@ export async function ingestConversation(input: IngestConversationInput) {
     await client.query(
       `INSERT INTO conversation_storage (conversation_id, storage_type, storage_key, content_hash, parser_version)
        VALUES ($1, $2, $3, $4, $5)`,
-      [id, input.storageType, input.storageKey, input.contentHash ?? null, parserVersion]
+      [id, input.storageType, input.storageKey, input.contentHash, parserVersion]
     );
 
     await client.query(
       `INSERT INTO conversation_stats (conversation_id) VALUES ($1)`,
       [id]
+    );
+
+
+    await client.query(
+      `INSERT INTO outbox_events (event_type, aggregate_type, aggregate_id, payload)
+      VALUES ($1, $2, $3, $4)`,
+      [
+        "CONVERSATION_INGESTED",
+        "conversation",
+        id,
+        {
+          model: input.model,
+          storageType: input.storageType,
+          storageKey: input.storageKey,
+          contentHash: input.contentHash ?? null
+        }
+      ]
     );
 
     await client.query("COMMIT");

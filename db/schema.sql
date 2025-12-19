@@ -40,4 +40,22 @@ CREATE INDEX idx_storage_type ON conversation_storage(storage_type);
 CREATE INDEX idx_stats_last_accessed ON conversation_stats(last_accessed);
 
 
+-- outbox event table to tell the future and say hey, this is what is gonna happen, if it doesnt, there is an issue-->
 
+CREATE TABLE IF NOT EXISTS outbox_events (
+  id BIGSERIAL PRIMARY KEY,
+  event_type TEXT NOT NULL,
+  aggregate_type TEXT NOT NULL,
+  aggregate_id UUID NOT NULL,
+  payload JSONB,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  processed_at TIMESTAMP,
+  attempts INTEGER NOT NULL DEFAULT 0,
+  last_error TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_outbox_unprocessed
+ON outbox_events(processed_at, created_at);
+
+CREATE INDEX IF NOT EXISTS idx_outbox_aggregate
+ON outbox_events(aggregate_type, aggregate_id);
