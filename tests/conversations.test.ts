@@ -16,7 +16,7 @@ beforeEach(async () => {
 afterAll(async () => {
   await closePool();
 });
-
+ // ingest conversation into db
 test("ingestConversation inserts into all tables", async () => {
   const { id } = await ingestConversation({
     model: "chatgpt",
@@ -50,4 +50,25 @@ test("ingestConversation inserts into all tables", async () => {
     [id]
   );
   expect(stats.rowCount).toBe(1);
+});
+
+
+//test for dedupe hashing
+test("dedupe returns the same conversation id for same contentHash", async () => {
+  const input = {
+    model: "chatgpt",
+    sourceType: "html_upload",
+    sourceReference: "a.html",
+    storageType: "local",
+    storageKey: "conversations/a.html",
+    contentHash: "abc123",
+    parserVersion: "v1"
+  } as const;
+
+  const first = await ingestConversation(input);
+  const second = await ingestConversation({ ...input, sourceReference: "b.html" });
+
+  expect(first.id).toBe(second.id);
+  expect(first.deduped).toBe(false);
+  expect(second.deduped).toBe(true);
 });

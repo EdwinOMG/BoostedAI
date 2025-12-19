@@ -19,11 +19,13 @@ CREATE TABLE conversation_storage (
   conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
   storage_type VARCHAR(50) NOT NULL,
   storage_key TEXT NOT NULL CHECK (length(storage_key) > 0),
-  content_hash TEXT,
+  content_hash TEXT NOT NULL,
   parser_version VARCHAR(20) NOT NULL DEFAULT 'v1',
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
-  CONSTRAINT storage_key_nonempty CHECK (length(storage_key) > 0)
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS ux_conversation_storage_content_hash
+ON conversation_storage(content_hash);
 
 CREATE TABLE conversation_stats (
   conversation_id UUID PRIMARY KEY REFERENCES conversations(id) ON DELETE CASCADE,

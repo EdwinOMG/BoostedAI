@@ -29,41 +29,85 @@ export type IngestConversationInput = {
 // generates a unique id to use everywhere
 
 export async function ingestConversation(input: IngestConversationInput) {
-  const id = randomUUID();
-  const parserVersion = input.parserVersion ?? "v1";
+  const client = await getPool().connect(); // connect to db connection
 
-  const client = await getPool().connect(); // single dedicated connection
   try {
-    await client.query("BEGIN"); // treat the following operations as one unit
+    await client.query("BEGIN"); // begin this group of commands 
 
-    await client.query( // the anchor row, everything references our main table 
+    if (input.contentHash) {  // if this input already stored, update stats table with last_accessed  and return existingid
+      const existing = await client.query(
+        `SELECT conversation_id
+         FROM conversation_storage
+         WHERE content_hash = $1
+         LIMIT 1`,
+        [input.contentHash]
+      );
+
+      if (existing.rowCount === 1) {
+        const existingId = existing.rows[0].conversation_id as string;
+
+        await client.query(
+          `UPDATE conversation_stats
+           SET last_accessed = NOW()
+           WHERE conversation_id = $1`,
+          [existingId]
+        );
+
+        await client.query("COMMIT");
+        return { id: existingId, deduped: true };
+      }
+    }
+
+    const id = randomUUID();  // else if not in db already, create an id, and insert content into the tables
+    const parserVersion = input.parserVersion ?? "v1";
+
+    await client.query(
       `INSERT INTO conversations (id, model) VALUES ($1, $2)`,
       [id, input.model]
     );
 
-    await client.query( // insert source metadata, multiple sources per conversation
+    await client.query(
       `INSERT INTO conversation_sources (conversation_id, source_type, source_reference)
        VALUES ($1, $2, $3)`,
       [id, input.sourceType, input.sourceReference ?? null]
     );
 
-    await client.query( //decouples db identity and blob content
+    await client.query(
       `INSERT INTO conversation_storage (conversation_id, storage_type, storage_key, content_hash, parser_version)
        VALUES ($1, $2, $3, $4, $5)`,
       [id, input.storageType, input.storageKey, input.contentHash ?? null, parserVersion]
     );
 
-    await client.query( // prevents null checks
+    await client.query(
       `INSERT INTO conversation_stats (conversation_id) VALUES ($1)`,
       [id]
     );
 
-    await client.query("COMMIT"); // id is valid everywhere and can proceed safely
-    return { id };
-  } catch (e) {
-    await client.query("ROLLBACK"); // db state resets, no partial writes and no corruption
+    await client.query("COMMIT");
+    return { id, deduped: false };
+  } catch (e: any) {
+    await client.query("ROLLBACK"); // rollback all of it if there is an error
+
+    if (e?.code === "23505" && input.contentHash) {
+      const client2 = await getPool().connect();
+      try {
+        const existing = await client2.query(
+          `SELECT conversation_id
+           FROM conversation_storage
+           WHERE content_hash = $1
+           LIMIT 1`,
+          [input.contentHash]
+        );
+        if (existing.rowCount === 1) {
+          return { id: existing.rows[0].conversation_id as string, deduped: true };
+        }
+      } finally {
+        client2.release();
+      }
+    }
+
     throw e;
   } finally {
-    client.release(); //release connection to prevent exhaustion, deadlocks, and outages
+    client.release();
   }
 }

@@ -1,0 +1,7 @@
+// hash tool
+
+import { createHash } from "crypto";
+
+export function sha256(text: string) {
+    return createHash("sha256").update(text, "utf8").digest("hex");
+}
