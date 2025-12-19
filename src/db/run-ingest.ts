@@ -11,7 +11,7 @@ async function main() {
     sourceReference: "sample.html",
     storageType: "local",
     storageKey: "conversations/sample.html",
-    contentHash: null,
+    contentHash: "test_hash",
     parserVersion: "v1"
   });
 
