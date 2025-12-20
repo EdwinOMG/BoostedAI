@@ -4,13 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "worker:opensearch": "node --loader tsx src/workers/opensearchIndexer.ts",
     "test": "vitest run"
+    
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.26.0",
   "dependencies": {
+    "@opensearch-project/opensearch": "^3.5.1",
     "dotenv": "^17.2.3",
     "pg": "^8.16.3",
     "uuid": "^13.0.0"
@@ -23,6 +26,4 @@
     "tsx": "^4.21.0",
     "vitest": "^4.0.16"
   }
-  
-
 }
