@@ -1,0 +1,41 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: boostedai-postgres
+    environment:
+      POSTGRES_USER: boostedai_app
+      POSTGRES_PASSWORD: boostedai_password
+      POSTGRES_DB: boostedai_dev
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis/redis-stack:latest
+    container_name: boostedai-redis
+    ports:
+      - "6379:6379"
+      - "8001:8001"
+    volumes:
+      - redis_data:/data
+
+  opensearch:
+    image: opensearchproject/opensearch:2
+    container_name: boostedai-opensearch
+    environment:
+      discovery.type: single-node
+      plugins.security.disabled: "true"
+      DISABLE_INSTALL_DEMO_CONFIG: "true"
+      OPENSEARCH_JAVA_OPTS: "-Xms1g -Xmx1g"
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+
+
+volumes:
+  postgres_data:
+  redis_data:
+  opensearch_data:

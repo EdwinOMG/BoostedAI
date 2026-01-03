@@ -2,6 +2,8 @@ import { osClient } from "./opensearchClient";
 // creates index
 const indexName = process.env.OPENSEARCH_INDEX_CONVERSATIONS ?? "boostedai_conversations";
 
+
+// make sure that the index(search table) exists
 export async function ensureConversationsIndex() {
     const exists = await osClient.indices.exists({ index: indexName });
     if (exists.body === true) return;

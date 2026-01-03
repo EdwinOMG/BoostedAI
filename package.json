@@ -5,8 +5,10 @@
   "main": "index.js",
   "scripts": {
     "worker:opensearch": "node --loader tsx src/workers/opensearchIndexer.ts",
-    "test": "vitest run"
-    
+    "test": "vitest run",
+    "worker:index": "node -r dotenv/config --import tsx src/workers/opensearchIndexer.ts"
+
+
   },
   "keywords": [],
   "author": "",
@@ -16,6 +18,7 @@
     "@opensearch-project/opensearch": "^3.5.1",
     "dotenv": "^17.2.3",
     "pg": "^8.16.3",
+    "redis": "^5.10.0",
     "uuid": "^13.0.0"
   },
   "devDependencies": {
