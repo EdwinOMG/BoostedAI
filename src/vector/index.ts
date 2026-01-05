@@ -22,7 +22,7 @@ export async function ensureVectorIndex() {
     } catch {}
 
     await redis.sendCommand([
-    "FT.CREATE", // this command creates an index in redis
+    "FT.CREATE",
     indexName,
     "ON",
     "HASH",
@@ -39,12 +39,13 @@ export async function ensureVectorIndex() {
     "embedding",
     "VECTOR",
     "HNSW",
-    "10",
+    "6",
     "TYPE",
     "FLOAT32",
     "DIM",
     String(dim),
     "DISTANCE_METRIC",
     "COSINE"
-  ]);
+]);
+
 }
